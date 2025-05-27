@@ -1,0 +1,26 @@
+logs
+*.log
+pnpm-debug.log*
+node_modules
+dist
+
+src/graphql
+src/lib/fetcher/fakes/fixtureData.json
+src/playground.ts
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.cursorignore
+
+# Playwright
+e2e/screenshots/
+e2e/reports/
+e2e/snapshots/ # this is temporary, but likely want to use docker if keeping this in CI

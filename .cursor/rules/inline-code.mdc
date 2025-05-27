@@ -1,0 +1,89 @@
+---
+description: how to 'inline' code
+globs: 
+alwaysApply: false
+---
+When asked to "inline" code, the code to be inlined is likely a function or react component.
+- Move as much of the referenced code into the inlined location
+- This is intended as a refactor that shouldn't impact functionality
+- Make small incremental steps when inlining, this allows the user to continue to request for more inlining
+- If there is ambiguity of what to inline, prompt for more specific instructions, such as what symbol or function to inline
+
+## example 1: simple and clear intent
+
+```ts
+function foo(n: number) {
+  return n + 42
+}
+
+function doing() {
+    const y = foo(4) // the user is focussed on this line
+    return y + 7
+}
+```
+
+Acceptable outputs:
+```ts
+// OK, function has been removed and code 'inlined'
+function doing() {
+    const y = 4 + 42 
+    return y + 7
+}
+
+// BEST, variable `y` was also removed and inlined to its only reference
+function doing() {
+    return (4 + 42) + 7
+}
+
+// BAD: despite being correct, this places too much work on the LLM and relies on more advanced computation. better to just inline the code instructions and allow the user to prompt further or be more specific
+function doing() {
+    return 53
+}
+```
+
+## example 2: React component
+
+```tsx
+import { useState } from 'react'
+
+function Comp({ title, children }) { // user is focused here
+    const [value, setValue] = useState('')
+    return (
+        <div>
+            <h1>{title}</h1>
+            <input value={value} onChange={(e) => setValue(e.target.value)} />
+            {children}
+        </div>
+    )
+}
+
+function Main({ title }) {
+    return (
+        <Wrapper>
+          <Comp title={title}> // OR user is focused here
+            <Markdown content="some lovely content" />
+          </Comp>
+        </Wrapper>
+    )
+}
+```
+
+Acceptable outputs:
+```tsx
+import { useState } from 'react'
+
+// GOOD: component `Comp` has been inlined into its only reference
+function Main({ title }) {
+    const [value, setValue] = useState('')
+
+    return (
+        <Wrapper>
+            <div>
+                <h1>{title}</h1>
+                <input value={value} onChange={(e) => setValue(e.target.value)} />
+                <Markdown content="some lovely content" />
+            </div>
+        </Wrapper>
+    )
+}
+```

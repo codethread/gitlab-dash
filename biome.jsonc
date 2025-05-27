@@ -1,0 +1,65 @@
+{
+	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true,
+	},
+	"files": {
+		"ignoreUnknown": false,
+		"ignore": ["./src/routeTree.gen.ts"],
+	},
+	"formatter": {
+		"enabled": false, // just using prettier for now until it formats nested gql
+		// "useEditorconfig": true,
+		// "lineWidth": 100,
+		// "bracketSpacing": false
+	},
+	"organizeImports": {
+		"enabled": true,
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"correctness": {
+				"noUnusedImports": "error",
+			},
+			"nursery": {
+				"noEnum": "error",
+				"noTemplateCurlyInString": "error",
+				"useComponentExportOnlyModules": {
+					"level": "error",
+					"options": {
+						"allowConstantExport": true,
+						"allowExportNames": ["Route"],
+					},
+				}, // react-fast-refresh https://www.gatsbyjs.com/docs/reference/local-development/fast-refresh/#how-it-works
+			},
+			"performance": {
+				"noBarrelFile": "error",
+				"noReExportAll": "error",
+			},
+			"complexity": {},
+		},
+	},
+	"javascript": {
+		"formatter": {
+			"bracketSameLine": false,
+			"quoteStyle": "single",
+			"bracketSpacing": false,
+		},
+	},
+	"overrides": [
+		{
+			"include": ["src/routes/**/*.tsx"],
+			"linter": {
+				"rules": {
+					"nursery": {
+						"useComponentExportOnlyModules": "off",
+					},
+				},
+			},
+		},
+	],
+}

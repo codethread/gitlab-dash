@@ -1,0 +1,9 @@
+{
+	"useTabs": true,
+	"bracketSpacing": false,
+	"semi": false,
+	"plugins": [
+		"@trivago/prettier-plugin-sort-imports",
+		"prettier-plugin-tailwindcss"
+	]
+}
