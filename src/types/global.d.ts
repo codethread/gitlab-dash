@@ -1,7 +1,6 @@
-declare const __FAKE_FETCHER__: boolean
-declare const __HASH__: string | undefined
-declare const __FAKE_NETRC__: string | undefined
-declare const __IS_DEV__: boolean | undefined
+declare const __DOMAIN__: string
+declare const __TOKEN__: string
+declare const __APP__: string
 
 interface IChildren {
 	children: React.ReactNode

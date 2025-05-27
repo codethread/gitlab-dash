@@ -1,7 +1,151 @@
+import {PipesQuery} from "./-pipes.gql"
+import {Loader} from "@/components/ui/Loader"
+import {Button} from "@/components/ui/button"
+import {
+	ChartConfig,
+	ChartContainer,
+	ChartLegend,
+	ChartLegendContent,
+	ChartTooltip,
+	ChartTooltipContent,
+} from "@/components/ui/chart"
+import {Toaster} from "@/components/ui/sonner"
+import {execute} from "@/lib/fetcher"
+import {useQuery} from "@tanstack/react-query"
 import {createFileRoute} from "@tanstack/react-router"
+import {format, formatDuration} from "date-fns"
+import {Copy} from "lucide-react"
+import {BarChart, Bar, XAxis} from "recharts"
+import {toast} from "sonner"
+import {z} from "zod"
+
+const BUILD_JOBS = ["web_staging", "web_feature", "web_production"] as const
+const JOBS = ["checks", "manual_deps_install", ...BUILD_JOBS] as const
+
+const JobSchema = z.object({
+	name: z.union([z.enum(JOBS), z.literal("build")]),
+	jobName: z.string(),
+	duration: z.number(),
+	date: z.string(),
+	durationDisplay: z.string(),
+	webPath: z.string(),
+})
+type Job = z.infer<typeof JobSchema>
 
 export const Route = createFileRoute("/")({
 	component: () => {
-		return <div>hey</div>
+		const {data, isLoading, error} = useQuery({
+			queryKey: ["pipes"],
+			queryFn: () =>
+				execute(
+					{domain: __DOMAIN__, token: __TOKEN__, timeout: 10000},
+					PipesQuery,
+					{app: __APP__, cursor: undefined},
+				),
+		})
+
+		if (isLoading) {
+			return <Loader variant="page" />
+		}
+
+		if (error) {
+			return <div>Error: {error.message}</div>
+		}
+
+		if (!data?.project?.pipelines?.nodes) {
+			return <div>No data available</div>
+		}
+
+		const chartData = data.project.pipelines.nodes
+			.flatMap((pipeline) =>
+				pipeline?.jobs?.nodes
+					?.filter((job) => JOBS.includes(job?.name ?? "nope"))
+					.map((job) =>
+						JobSchema.parse({
+							date: pipeline.createdAt,
+							duration: job?.duration,
+							durationDisplay: formatDuration(
+								{
+									seconds: (job?.duration ?? 0) % 60,
+									minutes: Math.floor((job?.duration ?? 0) / 60),
+								},
+								{
+									format: ["minutes", "seconds"],
+								},
+							),
+							name: BUILD_JOBS.includes(job?.name ?? "nope")
+								? "build"
+								: job?.name,
+							jobName: job?.name,
+							webPath: job?.webPath,
+						}),
+					),
+			)
+			.filter(Boolean)
+			.toSorted((a, b) => a.date.localeCompare(b.date))
+
+		const groupedData = Object.groupBy(chartData, (data) => data.name)
+
+		const chartConfig = {
+			duration: {
+				label: "Duration",
+				color: "#2563eb",
+			},
+		} satisfies ChartConfig
+
+		return (
+			<div className="w-full">
+				<p className="text-sm text-gray-500">Jobs durations</p>
+				<Button
+					variant="outline"
+					className="cursor-pointer"
+					size="icon"
+					onClick={() => {
+						navigator.clipboard.writeText(PipesQuery.toString())
+						toast.success("Query copied to clipboard", {position: "top-right"})
+					}}
+				>
+					<Copy className="h-4 w-4" />
+				</Button>
+				<hr className="my-4" />
+				{Object.entries(groupedData).map(([name, data]) => (
+					<div key={name}>
+						<h2 className="text-lg font-bold">{name}</h2>
+						<ChartContainer config={chartConfig}>
+							<BarChart accessibilityLayer data={data}>
+								<XAxis
+									dataKey="date"
+									tickMargin={10}
+									tickFormatter={(value) => format(value, "d/MM")}
+								/>
+								<ChartTooltip
+									content={
+										<ChartTooltipContent
+											formatter={(_, __, item) =>
+												`${item.payload?.jobName} ${item.payload?.durationDisplay}`
+											}
+										/>
+									}
+								/>
+								<ChartLegend content={<ChartLegendContent />} />
+								<Bar
+									dataKey="duration"
+									fill="var(--color-duration)"
+									radius={4}
+									onClick={({payload}: {payload: Job}) => {
+										if (payload) {
+											window.open(
+												`https://${__DOMAIN__}${payload.webPath}`,
+												"_blank",
+											)
+										}
+									}}
+								/>
+							</BarChart>
+						</ChartContainer>
+					</div>
+				))}
+			</div>
+		)
 	},
 })
