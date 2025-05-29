@@ -36,8 +36,6 @@ export const PipesQuery = graphql(`
 					endCursor
 				}
 				nodes {
-					trigger
-					name
 					source
 					path
 					duration
