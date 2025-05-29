@@ -11,8 +11,9 @@ import {
 	SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {Route as JobsRoute} from "@/routes/jobs.index"
+import {Route as PipesRoute} from "@/routes/pipes.index"
 import {Link} from "@tanstack/react-router"
-import {Home, Inbox, Settings} from "lucide-react"
+import {ChartColumn, ChartScatter, Home, Inbox, Settings} from "lucide-react"
 
 export function AppSidebar() {
 	// Menu items.
@@ -23,9 +24,14 @@ export function AppSidebar() {
 			icon: Home,
 		},
 		{
+			title: "Pipes",
+			url: PipesRoute.fullPath,
+			icon: ChartColumn,
+		},
+		{
 			title: "Jobs",
 			url: JobsRoute.fullPath,
-			icon: Inbox,
+			icon: ChartScatter,
 		},
 		{
 			title: "Settings",

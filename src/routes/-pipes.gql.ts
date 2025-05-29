@@ -1,6 +1,6 @@
 import {graphql} from "@/graphql"
 
-export const PipesQuery = graphql(`
+export const JobsQuery = graphql(`
 	query JobDurations($app: ID!, $cursor: String) {
 		project(fullPath: $app) {
 			name
@@ -20,6 +20,29 @@ export const PipesQuery = graphql(`
 							duration
 						}
 					}
+				}
+			}
+		}
+	}
+`)
+
+export const PipesQuery = graphql(`
+	query Pipes($app: ID!, $cursor: String) {
+		project(fullPath: $app) {
+			name
+			pipelines(status: SUCCESS, first: 100, after: $cursor) {
+				pageInfo {
+					hasNextPage
+					endCursor
+				}
+				nodes {
+					trigger
+					name
+					source
+					path
+					duration
+					createdAt
+					finishedAt
 				}
 			}
 		}

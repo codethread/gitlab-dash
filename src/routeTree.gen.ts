@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
+import { Route as PipesIndexImport } from './routes/pipes.index'
 import { Route as JobsIndexImport } from './routes/jobs.index'
 
 // Create/Update Routes
@@ -19,6 +20,12 @@ import { Route as JobsIndexImport } from './routes/jobs.index'
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const PipesIndexRoute = PipesIndexImport.update({
+  id: '/pipes/',
+  path: '/pipes/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -46,6 +53,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobsIndexImport
       parentRoute: typeof rootRoute
     }
+    '/pipes/': {
+      id: '/pipes/'
+      path: '/pipes'
+      fullPath: '/pipes'
+      preLoaderRoute: typeof PipesIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -54,36 +68,41 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/jobs': typeof JobsIndexRoute
+  '/pipes': typeof PipesIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/jobs': typeof JobsIndexRoute
+  '/pipes': typeof PipesIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/jobs/': typeof JobsIndexRoute
+  '/pipes/': typeof PipesIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/jobs'
+  fullPaths: '/' | '/jobs' | '/pipes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/jobs'
-  id: '__root__' | '/' | '/jobs/'
+  to: '/' | '/jobs' | '/pipes'
+  id: '__root__' | '/' | '/jobs/' | '/pipes/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   JobsIndexRoute: typeof JobsIndexRoute
+  PipesIndexRoute: typeof PipesIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   JobsIndexRoute: JobsIndexRoute,
+  PipesIndexRoute: PipesIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -97,7 +116,8 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/jobs/"
+        "/jobs/",
+        "/pipes/"
       ]
     },
     "/": {
@@ -105,6 +125,9 @@ export const routeTree = rootRoute
     },
     "/jobs/": {
       "filePath": "jobs.index.tsx"
+    },
+    "/pipes/": {
+      "filePath": "pipes.index.tsx"
     }
   }
 }

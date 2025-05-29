@@ -1,15 +1,15 @@
-import {JobsQuery} from "./-pipes.gql"
+import {PipesQuery} from "./-pipes.gql"
 import {Loader} from "@/components/ui/Loader"
 import {Button} from "@/components/ui/button"
 import {
 	ChartConfig,
 	ChartContainer,
-	ChartLegend,
-	ChartLegendContent,
 	ChartTooltip,
 	ChartTooltipContent,
+	ChartLegend,
+	ChartLegendContent,
 } from "@/components/ui/chart"
-import {Toaster} from "@/components/ui/sonner"
+import {Pipeline} from "@/graphql/graphql"
 import {execute} from "@/lib/fetcher"
 import {useQuery} from "@tanstack/react-query"
 import {createFileRoute} from "@tanstack/react-router"
@@ -19,32 +19,27 @@ import {BarChart, Bar, XAxis} from "recharts"
 import {toast} from "sonner"
 import {z} from "zod"
 
-const BUILD_JOBS = ["web_staging", "web_feature", "web_production"] as const
-const JOBS = ["checks", "manual_deps_install", ...BUILD_JOBS] as const
+const SOURCES = [
+	"push",
+	"merge_request_event",
+	"schedule",
+	"api",
+	"unknown",
+] as const
 
-const JobSchema = z.object({
-	name: z.union([z.enum(JOBS), z.literal("build")]),
-	jobName: z.string(),
-	duration: z.number(),
-	date: z.string(),
-	durationDisplay: z.string(),
-	webPath: z.string(),
-})
-type Job = z.infer<typeof JobSchema>
-
-export const Route = createFileRoute("/jobs/")({
+export const Route = createFileRoute("/pipes/")({
 	component: RouteComponent,
 })
 
-export const RouteJobsIndex = Route.fullPath
+export const RoutePipesIndex = Route.fullPath
 
 function RouteComponent() {
 	const {data, isLoading, error} = useQuery({
-		queryKey: ["jobs"],
+		queryKey: ["pipes"],
 		queryFn: () =>
 			execute(
 				{domain: __DOMAIN__, token: __TOKEN__, timeout: 10000},
-				JobsQuery,
+				PipesQuery,
 				{app: __APP__, cursor: undefined},
 			),
 	})
@@ -61,36 +56,6 @@ function RouteComponent() {
 		return <div>No data available</div>
 	}
 
-	const chartData = data.project.pipelines.nodes
-		.flatMap((pipeline) =>
-			pipeline?.jobs?.nodes
-				?.filter((job) => JOBS.includes(job?.name ?? "nope"))
-				.map((job) =>
-					JobSchema.parse({
-						date: pipeline.createdAt,
-						duration: job?.duration,
-						durationDisplay: formatDuration(
-							{
-								seconds: (job?.duration ?? 0) % 60,
-								minutes: Math.floor((job?.duration ?? 0) / 60),
-							},
-							{
-								format: ["minutes", "seconds"],
-							},
-						),
-						name: BUILD_JOBS.includes(job?.name ?? "nope")
-							? "build"
-							: job?.name,
-						jobName: job?.name,
-						webPath: job?.webPath,
-					}),
-				),
-		)
-		.filter(Boolean)
-		.toSorted((a, b) => a.date.localeCompare(b.date))
-
-	const groupedData = Object.groupBy(chartData, (data) => data.name)
-
 	const chartConfig = {
 		duration: {
 			label: "Duration",
@@ -98,24 +63,36 @@ function RouteComponent() {
 		},
 	} satisfies ChartConfig
 
+	const chartData = data.project.pipelines.nodes.filter(Boolean).map(
+		(pipeline) =>
+			({
+				...pipeline,
+				source: z.enum(SOURCES).parse(pipeline.source ?? "unknown"),
+				duration: pipeline.duration,
+				date: pipeline.createdAt,
+			}) as const,
+	)
+
+	const groupedData = Object.groupBy(chartData, (data) => data.source)
+
 	return (
 		<div className="w-full">
-			<p className="text-sm text-gray-500">Jobs durations</p>
+			<p className="text-sm text-gray-500">Pipes durations</p>
 			<Button
 				variant="outline"
 				className="cursor-pointer"
 				size="icon"
 				onClick={() => {
-					navigator.clipboard.writeText(JobsQuery.toString())
+					navigator.clipboard.writeText(PipesQuery.toString())
 					toast.success("Query copied to clipboard", {position: "top-right"})
 				}}
 			>
 				<Copy className="h-4 w-4" />
 			</Button>
 			<hr className="my-4" />
-			{Object.entries(groupedData).map(([name, data]) => (
-				<div key={name}>
-					<h2 className="text-lg font-bold">{name}</h2>
+			{Object.entries(groupedData).map(([source, data]) => (
+				<div key={source}>
+					<p className="text-sm text-gray-500">{source}</p>
 					<ChartContainer config={chartConfig}>
 						<BarChart accessibilityLayer data={data}>
 							<XAxis
@@ -126,9 +103,10 @@ function RouteComponent() {
 							<ChartTooltip
 								content={
 									<ChartTooltipContent
-										formatter={(_, __, item) =>
-											`${item.payload?.jobName} ${item.payload?.durationDisplay}`
-										}
+										formatter={(_, __, {payload}) => {
+											const p = payload as Pipeline
+											return JSON.stringify(p, null, 2)
+										}}
 									/>
 								}
 							/>
@@ -137,10 +115,10 @@ function RouteComponent() {
 								dataKey="duration"
 								fill="var(--color-duration)"
 								radius={4}
-								onClick={({payload}: {payload: Job}) => {
+								onClick={({payload}: {payload: Pipeline}) => {
 									if (payload) {
 										window.open(
-											`https://${__DOMAIN__}${payload.webPath}`,
+											`https://${__DOMAIN__}${payload.path}`,
 											"_blank",
 										)
 									}
