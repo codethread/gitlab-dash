@@ -9,12 +9,21 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart"
+import {Slider} from "@/components/ui/slider"
 import {Toaster} from "@/components/ui/sonner"
 import {execute} from "@/lib/fetcher"
+import {
+	TrimSlider,
+	applyTrimming,
+	initializeSliders,
+	updateSliderValue,
+	getTrimPercentage,
+} from "@/lib/trim-utils"
 import {useQuery} from "@tanstack/react-query"
 import {createFileRoute} from "@tanstack/react-router"
 import {format, formatDuration} from "date-fns"
 import {Copy} from "lucide-react"
+import {useEffect, useState} from "react"
 import {BarChart, Bar, XAxis} from "recharts"
 import {toast} from "sonner"
 import {z} from "zod"
@@ -38,7 +47,9 @@ export const Route = createFileRoute("/jobs/")({
 
 export const RouteJobsIndex = Route.fullPath
 
+const MAX_TRIM_PERCENTAGE = 50
 function RouteComponent() {
+	const [sliders, setSliders] = useState<TrimSlider[]>([])
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["jobs"],
 		queryFn: () =>
@@ -91,6 +102,12 @@ function RouteComponent() {
 
 	const groupedData = Object.groupBy(chartData, (data) => data.name)
 
+	// Initialize sliders based on job names
+	useEffect(() => {
+		const jobNames = Object.keys(groupedData)
+		setSliders(initializeSliders(jobNames))
+	}, [data])
+
 	const chartConfig = {
 		duration: {
 			label: "Duration",
@@ -113,43 +130,89 @@ function RouteComponent() {
 				<Copy className="h-4 w-4" />
 			</Button>
 			<hr className="my-4" />
-			{Object.entries(groupedData).map(([name, data]) => (
-				<div key={name}>
-					<h2 className="text-lg font-bold">{name}</h2>
-					<ChartContainer config={chartConfig}>
-						<BarChart accessibilityLayer data={data}>
-							<XAxis
-								dataKey="date"
-								tickMargin={10}
-								tickFormatter={(value) => format(value, "d/MM")}
-							/>
-							<ChartTooltip
-								content={
-									<ChartTooltipContent
-										formatter={(_, __, item) =>
-											`${item.payload?.jobName} ${item.payload?.durationDisplay}`
-										}
-									/>
-								}
-							/>
-							<ChartLegend content={<ChartLegendContent />} />
-							<Bar
-								dataKey="duration"
-								fill="var(--color-duration)"
-								radius={4}
-								onClick={({payload}: {payload: Job}) => {
-									if (payload) {
-										window.open(
-											`https://${__DOMAIN__}${payload.webPath}`,
-											"_blank",
-										)
-									}
-								}}
-							/>
-						</BarChart>
-					</ChartContainer>
-				</div>
-			))}
+			{sliders.length > 0 &&
+				Object.entries(groupedData)
+					.map(([name, data]) => {
+						const trimPercentage = getTrimPercentage(sliders, name)
+						const trimmedData = applyTrimming(data, trimPercentage)
+						return [name, trimmedData] as const
+					})
+					.map(([name, data]) => {
+						const averageDuration =
+							data.reduce((acc, d) => acc + d.duration, 0) / data.length
+						return (
+							<div key={name}>
+								<div className="">
+									<div className="flex items-center gap-2">
+										<p className="shrink-0 text-lg text-gray-300">{name}</p>
+									</div>
+									<div className="flex items-center gap-2">
+										<p className="shrink-0 text-sm text-gray-500">
+											Average duration:{" "}
+											{formatDuration(
+												{
+													seconds: Math.floor(averageDuration % 60),
+													minutes: Math.floor(averageDuration / 60),
+												},
+												{
+													format: ["minutes", "seconds"],
+												},
+											)}
+										</p>
+										<p className="shrink-0 text-sm text-gray-500">
+											Trim percentage {getTrimPercentage(sliders, name)}%
+										</p>
+										<Slider
+											min={0}
+											max={MAX_TRIM_PERCENTAGE}
+											step={1}
+											value={[getTrimPercentage(sliders, name)]}
+											onValueChange={([value]) => {
+												if (value !== undefined) {
+													setSliders((prev) =>
+														updateSliderValue(prev, name, value),
+													)
+												}
+											}}
+										/>
+									</div>
+								</div>
+								<ChartContainer config={chartConfig}>
+									<BarChart accessibilityLayer data={data}>
+										<XAxis
+											dataKey="date"
+											tickMargin={10}
+											tickFormatter={(value) => format(value, "d/MM")}
+										/>
+										<ChartTooltip
+											content={
+												<ChartTooltipContent
+													formatter={(_, __, item) =>
+														`${item.payload?.jobName} ${item.payload?.durationDisplay}`
+													}
+												/>
+											}
+										/>
+										<ChartLegend content={<ChartLegendContent />} />
+										<Bar
+											dataKey="duration"
+											fill="var(--color-duration)"
+											radius={4}
+											onClick={({payload}: {payload: Job}) => {
+												if (payload) {
+													window.open(
+														`https://${__DOMAIN__}${payload.webPath}`,
+														"_blank",
+													)
+												}
+											}}
+										/>
+									</BarChart>
+								</ChartContainer>
+								<hr className="my-4" />
+							</div>
+						)
+					})}
 		</div>
 	)
 }

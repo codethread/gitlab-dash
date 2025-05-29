@@ -12,11 +12,18 @@ import {
 import {Slider} from "@/components/ui/slider"
 import {Pipeline} from "@/graphql/graphql"
 import {execute} from "@/lib/fetcher"
+import {
+	TrimSlider,
+	applyTrimming,
+	initializeSliders,
+	updateSliderValue,
+	getTrimPercentage,
+} from "@/lib/trim-utils"
 import {useQuery} from "@tanstack/react-query"
 import {createFileRoute} from "@tanstack/react-router"
 import {format, formatDuration} from "date-fns"
 import {Copy} from "lucide-react"
-import {useEffect, useLayoutEffect, useState} from "react"
+import {useEffect, useState} from "react"
 import {BarChart, Bar, XAxis} from "recharts"
 import {toast} from "sonner"
 import {z} from "zod"
@@ -37,12 +44,7 @@ export const RoutePipesIndex = Route.fullPath
 
 const MAX_TRIM_PERCENTAGE = 50
 function RouteComponent() {
-	const [sliders, setSliders] = useState<
-		{
-			source: string
-			trimPercentage: [number]
-		}[]
-	>([])
+	const [sliders, setSliders] = useState<TrimSlider[]>([])
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["pipes"],
 		queryFn: () =>
@@ -55,20 +57,14 @@ function RouteComponent() {
 
 	useEffect(() => {
 		const pipes = data?.project?.pipelines?.nodes
-		const sources = new Set(
-			pipes?.map((pipeline) =>
-				z.enum(SOURCES).parse(pipeline?.source ?? "unknown"),
+		const sources = Array.from(
+			new Set(
+				pipes?.map((pipeline) =>
+					z.enum(SOURCES).parse(pipeline?.source ?? "unknown"),
+				),
 			),
 		)
-		for (const source of sources) {
-			setSliders((prev) => [
-				...prev,
-				{
-					source,
-					trimPercentage: [0],
-				},
-			])
-		}
+		setSliders(initializeSliders(sources))
 	}, [data])
 
 	if (isLoading) {
@@ -120,29 +116,9 @@ function RouteComponent() {
 			{sliders.length > 0 &&
 				Object.entries(groupedData)
 					.map(([source, data]) => {
-						const trimPercentage = sliders.find((s) => s.source === source)
-							?.trimPercentage[0]
-						if (trimPercentage === undefined) {
-							throw new Error("Trim percentage not found")
-						}
-
-						// Sort data by duration to find percentile-based thresholds
-						const sortedData = [...data].sort((a, b) => a.duration - b.duration)
-						const totalCount = sortedData.length
-
-						// Calculate how many items to trim from each end
-						const trimCount = Math.floor((totalCount * trimPercentage) / 100)
-
-						const maxThreshold =
-							trimCount > 0
-								? sortedData[totalCount - 1 - trimCount]?.duration
-								: sortedData[totalCount - 1]?.duration
-
-						if (maxThreshold !== undefined) {
-							const trimmedData = data.filter((d) => d.duration <= maxThreshold)
-							return [source, trimmedData] as const
-						}
-						return [source, data] as const
+						const trimPercentage = getTrimPercentage(sliders, source)
+						const trimmedData = applyTrimming(data, trimPercentage)
+						return [source, trimmedData] as const
 					})
 					.map(([source, data]) => {
 						const averageDuration =
@@ -167,32 +143,19 @@ function RouteComponent() {
 											)}
 										</p>
 										<p className="shrink-0 text-sm text-gray-500">
-											Trim percentage{" "}
-											{
-												sliders.find((s) => s.source === source)
-													?.trimPercentage[0]
-											}
-											%
+											Trim percentage {getTrimPercentage(sliders, source)}%
 										</p>
 										<Slider
 											min={0}
 											max={MAX_TRIM_PERCENTAGE}
 											step={1}
-											value={
-												sliders.find((s) => s.source === source)
-													?.trimPercentage ?? [0]
-											}
+											value={[getTrimPercentage(sliders, source)]}
 											onValueChange={([value]) => {
-												setSliders((prev) => {
-													const newSliders = [...prev]
-													const slider = newSliders.find(
-														(s) => s.source === source,
+												if (value !== undefined) {
+													setSliders((prev) =>
+														updateSliderValue(prev, source, value),
 													)
-													if (slider && value !== undefined) {
-														slider.trimPercentage = [value]
-													}
-													return newSliders
-												})
+												}
 											}}
 										/>
 									</div>
