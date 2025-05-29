@@ -108,6 +108,10 @@ function RouteComponent() {
 			label: "Duration",
 			color: "#2563eb",
 		},
+		special: {
+			label: "Special",
+			color: "#f43f5e",
+		},
 	} satisfies ChartConfig
 
 	return (
@@ -129,7 +133,17 @@ function RouteComponent() {
 				Object.entries(groupedData)
 					.map(([name, data]) => {
 						const trimmedData = getAppliedTrimming(data, name)
-						return [name, trimmedData] as const
+						return [
+							name,
+							trimmedData.map((d) => {
+								if (d.date.startsWith("2025-05-22")) {
+									// replace duration with special - this allows a stacked bar chart to display in a different color
+									// there's probably a better way to do this
+									return {...d, duration: 0, special: d.duration}
+								}
+								return d
+							}),
+						] as const
 					})
 					.map(([name, data]) => {
 						const averageDuration =
@@ -191,7 +205,14 @@ function RouteComponent() {
 										/>
 										<ChartLegend content={<ChartLegendContent />} />
 										<Bar
+											dataKey="special"
+											stackId="a"
+											fill="var(--color-special)"
+											radius={4}
+										/>
+										<Bar
 											dataKey="duration"
+											stackId="a"
 											fill="var(--color-duration)"
 											radius={4}
 											onClick={({payload}: {payload: Job}) => {
