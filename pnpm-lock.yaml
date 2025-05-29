@@ -50,6 +50,9 @@ importers:
       '@tanstack/router-plugin':
         specifier: ^1.120.9
         version: 1.120.9(@tanstack/react-router@1.120.9(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(vite@6.2.0(@types/node@22.13.9)(jiti@2.4.2)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.0))
+      '@xstate/store':
+        specifier: ^3.6.2
+        version: 3.6.2(react@18.3.1)(solid-js@1.9.7)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1859,6 +1862,17 @@ packages:
   '@whatwg-node/promise-helpers@1.2.4':
     resolution: {integrity: sha512-daEUfaHbaMuAcor+FPAVK+pOCSzsAYhK6LN1y81EcakdqQEPQvjm74PTmfwfv8POg8pw4RyCv9LXB1e+mQDwqg==}
     engines: {node: '>=16.0.0'}
+
+  '@xstate/store@3.6.2':
+    resolution: {integrity: sha512-jsaQC+zluanhqWr/Y3KGxfM4tTbfQCGRQ6AxF+hTAZ+YwVRExk7T2ovHzgok1D1w/r4lV/uUrn7zSt2k3vMyNA==}
+    peerDependencies:
+      react: ^18.2.0 || ^19.0.0
+      solid-js: ^1.7.6
+    peerDependenciesMeta:
+      react:
+        optional: true
+      solid-js:
+        optional: true
 
   acorn@8.14.1:
     resolution: {integrity: sha512-OvQ/2pUDKmgfCg++xsTX1wGxfTaszcHVcTctW4UJB4hibJx2HXxxO5UmVgyjMa+ZDsiaf5wWLXYpRWMmBI0QHg==}
@@ -5335,6 +5349,11 @@ snapshots:
   '@whatwg-node/promise-helpers@1.2.4':
     dependencies:
       tslib: 2.8.1
+
+  '@xstate/store@3.6.2(react@18.3.1)(solid-js@1.9.7)':
+    optionalDependencies:
+      react: 18.3.1
+      solid-js: 1.9.7
 
   acorn@8.14.1: {}
 

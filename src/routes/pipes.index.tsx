@@ -2,7 +2,7 @@ import {PipesQuery} from "./-pipes.gql"
 import {Loader} from "@/components/ui/Loader"
 import {Button} from "@/components/ui/button"
 import {
-	ChartConfig,
+	type ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
@@ -10,20 +10,14 @@ import {
 	ChartLegendContent,
 } from "@/components/ui/chart"
 import {Slider} from "@/components/ui/slider"
-import {Pipeline} from "@/graphql/graphql"
+import type {Pipeline} from "@/graphql/graphql"
+import {useTrimSliders} from "@/hooks/use-trim-sliders"
 import {execute} from "@/lib/fetcher"
-import {
-	TrimSlider,
-	applyTrimming,
-	initializeSliders,
-	updateSliderValue,
-	getTrimPercentage,
-} from "@/lib/trim-utils"
 import {useQuery} from "@tanstack/react-query"
 import {createFileRoute} from "@tanstack/react-router"
 import {format, formatDuration} from "date-fns"
 import {Copy} from "lucide-react"
-import {useEffect, useState} from "react"
+import {useEffect} from "react"
 import {BarChart, Bar, XAxis} from "recharts"
 import {toast} from "sonner"
 import {z} from "zod"
@@ -44,7 +38,9 @@ export const RoutePipesIndex = Route.fullPath
 
 const MAX_TRIM_PERCENTAGE = 50
 function RouteComponent() {
-	const [sliders, setSliders] = useState<TrimSlider[]>([])
+	const {sliders, getTrimPercentage, getAppliedTrimming, trimSlidersStore} =
+		useTrimSliders()
+
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["pipes"],
 		queryFn: () =>
@@ -64,8 +60,8 @@ function RouteComponent() {
 				),
 			),
 		)
-		setSliders(initializeSliders(sources))
-	}, [data])
+		trimSlidersStore.send({type: "initializeSliders", sources})
+	}, [data, trimSlidersStore])
 
 	if (isLoading) {
 		return <Loader variant="page" />
@@ -116,8 +112,7 @@ function RouteComponent() {
 			{sliders.length > 0 &&
 				Object.entries(groupedData)
 					.map(([source, data]) => {
-						const trimPercentage = getTrimPercentage(sliders, source)
-						const trimmedData = applyTrimming(data, trimPercentage)
+						const trimmedData = getAppliedTrimming(data, source)
 						return [source, trimmedData] as const
 					})
 					.map(([source, data]) => {
@@ -143,18 +138,20 @@ function RouteComponent() {
 											)}
 										</p>
 										<p className="shrink-0 text-sm text-gray-500">
-											Trim percentage {getTrimPercentage(sliders, source)}%
+											Trim percentage {getTrimPercentage(source)}%
 										</p>
 										<Slider
 											min={0}
 											max={MAX_TRIM_PERCENTAGE}
 											step={1}
-											value={[getTrimPercentage(sliders, source)]}
+											value={[getTrimPercentage(source)]}
 											onValueChange={([value]) => {
 												if (value !== undefined) {
-													setSliders((prev) =>
-														updateSliderValue(prev, source, value),
-													)
+													trimSlidersStore.send({
+														type: "updateSliderValue",
+														source,
+														value,
+													})
 												}
 											}}
 										/>

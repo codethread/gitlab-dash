@@ -2,7 +2,7 @@ import {JobsQuery} from "./-pipes.gql"
 import {Loader} from "@/components/ui/Loader"
 import {Button} from "@/components/ui/button"
 import {
-	ChartConfig,
+	type ChartConfig,
 	ChartContainer,
 	ChartLegend,
 	ChartLegendContent,
@@ -10,10 +10,9 @@ import {
 	ChartTooltipContent,
 } from "@/components/ui/chart"
 import {Slider} from "@/components/ui/slider"
-import {Toaster} from "@/components/ui/sonner"
 import {execute} from "@/lib/fetcher"
 import {
-	TrimSlider,
+	type TrimSlider,
 	applyTrimming,
 	initializeSliders,
 	updateSliderValue,

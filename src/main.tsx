@@ -7,7 +7,6 @@ import {QueryClient} from "@tanstack/react-query"
 import {ReactQueryDevtools} from "@tanstack/react-query-devtools"
 import {PersistQueryClientProvider} from "@tanstack/react-query-persist-client"
 import {createRouter, RouterProvider} from "@tanstack/react-router"
-import {TanStackRouterDevtools} from "@tanstack/react-router-devtools"
 import React from "react"
 import ReactDOM from "react-dom/client"
 

@@ -13,7 +13,7 @@ import {
 import {Route as JobsRoute} from "@/routes/jobs.index"
 import {Route as PipesRoute} from "@/routes/pipes.index"
 import {Link} from "@tanstack/react-router"
-import {ChartColumn, ChartScatter, Home, Inbox, Settings} from "lucide-react"
+import {ChartColumn, ChartScatter, Home, Settings} from "lucide-react"
 
 export function AppSidebar() {
 	// Menu items.

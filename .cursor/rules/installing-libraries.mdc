@@ -12,12 +12,6 @@ This means that instead of picking a version manually (via updating the `package
 ```bash
 # pnpm
 pnpm add -D @typescript-eslint/eslint-plugin
-
-# yarn
-yarn add -D @typescript-eslint/eslint-plugin
-
-# npm
-npm install --save-dev @typescript-eslint/eslint-plugin
 ```
 
 This will ensure you're always using the latest version.
