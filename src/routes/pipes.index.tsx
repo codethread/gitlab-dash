@@ -39,7 +39,7 @@ export const RoutePipesIndex = Route.fullPath
 const MAX_TRIM_PERCENTAGE = 50
 function RouteComponent() {
 	const {sliders, getTrimPercentage, getAppliedTrimming, trimSlidersStore} =
-		useTrimSliders()
+		useTrimSliders({name: "pipes"})
 
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["pipes"],

@@ -10,19 +10,13 @@ import {
 	ChartTooltipContent,
 } from "@/components/ui/chart"
 import {Slider} from "@/components/ui/slider"
+import {useTrimSliders} from "@/hooks/use-trim-sliders"
 import {execute} from "@/lib/fetcher"
-import {
-	type TrimSlider,
-	applyTrimming,
-	initializeSliders,
-	updateSliderValue,
-	getTrimPercentage,
-} from "@/lib/trim-utils"
 import {useQuery} from "@tanstack/react-query"
 import {createFileRoute} from "@tanstack/react-router"
 import {format, formatDuration} from "date-fns"
 import {Copy} from "lucide-react"
-import {useEffect, useState} from "react"
+import {useEffect} from "react"
 import {BarChart, Bar, XAxis} from "recharts"
 import {toast} from "sonner"
 import {z} from "zod"
@@ -48,7 +42,9 @@ export const RouteJobsIndex = Route.fullPath
 
 const MAX_TRIM_PERCENTAGE = 50
 function RouteComponent() {
-	const [sliders, setSliders] = useState<TrimSlider[]>([])
+	const {sliders, getTrimPercentage, getAppliedTrimming, trimSlidersStore} =
+		useTrimSliders({name: "jobs"})
+
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["jobs"],
 		queryFn: () =>
@@ -104,8 +100,8 @@ function RouteComponent() {
 	// Initialize sliders based on job names
 	useEffect(() => {
 		const jobNames = Object.keys(groupedData)
-		setSliders(initializeSliders(jobNames))
-	}, [data])
+		trimSlidersStore.send({type: "initializeSliders", sources: jobNames})
+	}, [data, trimSlidersStore])
 
 	const chartConfig = {
 		duration: {
@@ -132,8 +128,7 @@ function RouteComponent() {
 			{sliders.length > 0 &&
 				Object.entries(groupedData)
 					.map(([name, data]) => {
-						const trimPercentage = getTrimPercentage(sliders, name)
-						const trimmedData = applyTrimming(data, trimPercentage)
+						const trimmedData = getAppliedTrimming(data, name)
 						return [name, trimmedData] as const
 					})
 					.map(([name, data]) => {
@@ -159,18 +154,20 @@ function RouteComponent() {
 											)}
 										</p>
 										<p className="shrink-0 text-sm text-gray-500">
-											Trim percentage {getTrimPercentage(sliders, name)}%
+											Trim percentage {getTrimPercentage(name)}%
 										</p>
 										<Slider
 											min={0}
 											max={MAX_TRIM_PERCENTAGE}
 											step={1}
-											value={[getTrimPercentage(sliders, name)]}
+											value={[getTrimPercentage(name)]}
 											onValueChange={([value]) => {
 												if (value !== undefined) {
-													setSliders((prev) =>
-														updateSliderValue(prev, name, value),
-													)
+													trimSlidersStore.send({
+														type: "updateSliderValue",
+														source: name,
+														value,
+													})
 												}
 											}}
 										/>
