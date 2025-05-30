@@ -40,18 +40,22 @@ export function Login() {
 
 	function onSubmit(data: z.infer<typeof FormSchema>) {
 		setAuth(data.domain, data.token)
-		toast.success("You submitted the following values:", {
-			description: JSON.stringify(data, null, 2),
-		})
+		toast.success("Successfully logged in")
 	}
 
 	return (
 		<div className="mt-[10vh] flex w-full items-center justify-center">
 			<div className="border-border w-full max-w-3xl space-y-8 rounded-lg border p-8">
-				<div>
-					<h2 className="text-foreground mt-6 text-center text-3xl font-extrabold">
+				<div className="mx-auto w-2/3 space-y-2 text-center">
+					<h2 className="text-foreground mt-6 text-center text-3xl leading-loose font-extrabold">
 						Sign in to GitLab Dashboard
 					</h2>
+					<p className="text-muted-foreground leading-normal text-pretty">
+						<span className="text-amber-200">NOTE:</span>
+						<b> Your token is stored in local storage.</b> <br />
+						<br />
+						It is recommended to use a personal access token with limited scope.
+					</p>
 				</div>
 				<div className="flex items-center justify-center">
 					<Form {...form}>
@@ -82,7 +86,12 @@ export function Login() {
 									<FormItem>
 										<FormLabel>Token</FormLabel>
 										<FormControl>
-											<Input placeholder="glpat-1234567890" {...field} />
+											<Input
+												type="password"
+												placeholder="glpat-1234567890"
+												autoComplete="off"
+												{...field}
+											/>
 										</FormControl>
 										<FormDescription>
 											This is your GitLab personal access token.
@@ -121,7 +130,7 @@ function CreateTokenButton({
 				)
 			}}
 		>
-			Create token
+			{domain ? "Create token" : "Enter domain"}
 		</Button>
 	)
 }

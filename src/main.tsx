@@ -47,7 +47,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 						<AuthProvider>
 							{({auth}) => <RouterProvider router={router} context={{auth}} />}
 						</AuthProvider>
-						<ReactQueryDevtools />
+						<ReactQueryDevtools position="right" />
 					</PersistQueryClientProvider>
 				</ErrorBoundary>
 			</div>

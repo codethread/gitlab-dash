@@ -10,12 +10,14 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import {authStore, useAuth} from "@/hooks/auth"
 import {Route as JobsRoute} from "@/routes/_authed/jobs.index"
 import {Route as PipesRoute} from "@/routes/_authed/pipes.index"
 import {Link} from "@tanstack/react-router"
-import {ChartColumn, ChartScatter, Home, Settings} from "lucide-react"
+import {ChartColumn, ChartScatter, Home, LogOut, Settings} from "lucide-react"
 
 export function AppSidebar() {
+	const {clearAuth} = useAuth()
 	// Menu items.
 	const items = [
 		{
@@ -61,7 +63,12 @@ export function AppSidebar() {
 					</SidebarGroupContent>
 				</SidebarGroup>
 			</SidebarContent>
-			<SidebarFooter />
+			<SidebarFooter>
+				<SidebarMenuButton onClick={clearAuth}>
+					<LogOut />
+					<span>Logout</span>
+				</SidebarMenuButton>
+			</SidebarFooter>
 		</Sidebar>
 	)
 }
