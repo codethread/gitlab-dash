@@ -12,6 +12,7 @@ import React from "react"
 import ReactDOM from "react-dom/client"
 
 const router = createRouter({
+	basepath: "/gitlab-dash",
 	routeTree,
 	context: {auth: undefined!},
 })
