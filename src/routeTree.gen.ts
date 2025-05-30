@@ -11,11 +11,17 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as AuthedRouteImport } from './routes/_authed/route'
 import { Route as IndexImport } from './routes/index'
-import { Route as PipesIndexImport } from './routes/pipes.index'
-import { Route as JobsIndexImport } from './routes/jobs.index'
+import { Route as AuthedPipesIndexImport } from './routes/_authed/pipes.index'
+import { Route as AuthedJobsIndexImport } from './routes/_authed/jobs.index'
 
 // Create/Update Routes
+
+const AuthedRouteRoute = AuthedRouteImport.update({
+  id: '/_authed',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const IndexRoute = IndexImport.update({
   id: '/',
@@ -23,16 +29,16 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const PipesIndexRoute = PipesIndexImport.update({
+const AuthedPipesIndexRoute = AuthedPipesIndexImport.update({
   id: '/pipes/',
   path: '/pipes/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => AuthedRouteRoute,
 } as any)
 
-const JobsIndexRoute = JobsIndexImport.update({
+const AuthedJobsIndexRoute = AuthedJobsIndexImport.update({
   id: '/jobs/',
   path: '/jobs/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => AuthedRouteRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -46,63 +52,85 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/jobs/': {
-      id: '/jobs/'
-      path: '/jobs'
-      fullPath: '/jobs'
-      preLoaderRoute: typeof JobsIndexImport
+    '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthedRouteImport
       parentRoute: typeof rootRoute
     }
-    '/pipes/': {
-      id: '/pipes/'
+    '/_authed/jobs/': {
+      id: '/_authed/jobs/'
+      path: '/jobs'
+      fullPath: '/jobs'
+      preLoaderRoute: typeof AuthedJobsIndexImport
+      parentRoute: typeof AuthedRouteImport
+    }
+    '/_authed/pipes/': {
+      id: '/_authed/pipes/'
       path: '/pipes'
       fullPath: '/pipes'
-      preLoaderRoute: typeof PipesIndexImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof AuthedPipesIndexImport
+      parentRoute: typeof AuthedRouteImport
     }
   }
 }
 
 // Create and export the route tree
 
+interface AuthedRouteRouteChildren {
+  AuthedJobsIndexRoute: typeof AuthedJobsIndexRoute
+  AuthedPipesIndexRoute: typeof AuthedPipesIndexRoute
+}
+
+const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
+  AuthedJobsIndexRoute: AuthedJobsIndexRoute,
+  AuthedPipesIndexRoute: AuthedPipesIndexRoute,
+}
+
+const AuthedRouteRouteWithChildren = AuthedRouteRoute._addFileChildren(
+  AuthedRouteRouteChildren,
+)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/jobs': typeof JobsIndexRoute
-  '/pipes': typeof PipesIndexRoute
+  '': typeof AuthedRouteRouteWithChildren
+  '/jobs': typeof AuthedJobsIndexRoute
+  '/pipes': typeof AuthedPipesIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/jobs': typeof JobsIndexRoute
-  '/pipes': typeof PipesIndexRoute
+  '': typeof AuthedRouteRouteWithChildren
+  '/jobs': typeof AuthedJobsIndexRoute
+  '/pipes': typeof AuthedPipesIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/jobs/': typeof JobsIndexRoute
-  '/pipes/': typeof PipesIndexRoute
+  '/_authed': typeof AuthedRouteRouteWithChildren
+  '/_authed/jobs/': typeof AuthedJobsIndexRoute
+  '/_authed/pipes/': typeof AuthedPipesIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/jobs' | '/pipes'
+  fullPaths: '/' | '' | '/jobs' | '/pipes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/jobs' | '/pipes'
-  id: '__root__' | '/' | '/jobs/' | '/pipes/'
+  to: '/' | '' | '/jobs' | '/pipes'
+  id: '__root__' | '/' | '/_authed' | '/_authed/jobs/' | '/_authed/pipes/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  JobsIndexRoute: typeof JobsIndexRoute
-  PipesIndexRoute: typeof PipesIndexRoute
+  AuthedRouteRoute: typeof AuthedRouteRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  JobsIndexRoute: JobsIndexRoute,
-  PipesIndexRoute: PipesIndexRoute,
+  AuthedRouteRoute: AuthedRouteRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -116,18 +144,26 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/jobs/",
-        "/pipes/"
+        "/_authed"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
-    "/jobs/": {
-      "filePath": "jobs.index.tsx"
+    "/_authed": {
+      "filePath": "_authed/route.tsx",
+      "children": [
+        "/_authed/jobs/",
+        "/_authed/pipes/"
+      ]
     },
-    "/pipes/": {
-      "filePath": "pipes.index.tsx"
+    "/_authed/jobs/": {
+      "filePath": "_authed/jobs.index.tsx",
+      "parent": "/_authed"
+    },
+    "/_authed/pipes/": {
+      "filePath": "_authed/pipes.index.tsx",
+      "parent": "/_authed"
     }
   }
 }

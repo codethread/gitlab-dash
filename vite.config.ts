@@ -25,11 +25,6 @@ export default defineConfig(() => {
 				},
 			]),
 		],
-		define: {
-			__TOKEN__: JSON.stringify(process.env.CLI_GITLAB_TOKEN),
-			__DOMAIN__: JSON.stringify(process.env.CLI_GITLAB_DOMAIN),
-			__APP__: JSON.stringify(process.env.CLI_GITLAB_APP),
-		},
 		resolve: {
 			alias: {
 				"@": path.resolve(__dirname, "./src"),

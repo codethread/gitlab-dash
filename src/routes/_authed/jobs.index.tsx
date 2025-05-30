@@ -1,4 +1,4 @@
-import {JobsQuery} from "./-pipes.gql"
+import {JobsQuery} from "../../hooks/data/pipes.gql"
 import {Loader} from "@/components/ui/Loader"
 import {Button} from "@/components/ui/button"
 import {
@@ -9,14 +9,18 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart"
+import {Input} from "@/components/ui/input"
 import {Slider} from "@/components/ui/slider"
+import {useFetch} from "@/hooks/use-fetch"
 import {useTrimSliders} from "@/hooks/use-trim-sliders"
-import {execute} from "@/lib/fetcher"
 import {useQuery} from "@tanstack/react-query"
-import {createFileRoute} from "@tanstack/react-router"
+import {
+	createFileRoute,
+	useNavigate,
+} from "@tanstack/react-router"
 import {format, formatDuration} from "date-fns"
 import {Copy} from "lucide-react"
-import {useEffect} from "react"
+import {useEffect, useState} from "react"
 import {BarChart, Bar, XAxis} from "recharts"
 import {toast} from "sonner"
 import {z} from "zod"
@@ -34,25 +38,55 @@ const JobSchema = z.object({
 })
 type Job = z.infer<typeof JobSchema>
 
-export const Route = createFileRoute("/jobs/")({
+export const Route = createFileRoute("/_authed/jobs/")({
 	component: RouteComponent,
+	validateSearch: (search) => {
+		return {
+			app: (search.app as string) ?? "your-app",
+		}
+	},
 })
 
 export const RouteJobsIndex = Route.fullPath
 
 const MAX_TRIM_PERCENTAGE = 50
 function RouteComponent() {
+	const {app: urlApp} = Route.useSearch()
+	const navigate = useNavigate({from: Route.fullPath})
+	const [done, setDone] = useState(urlApp !== "your-app")
+	const [app, setApp] = useState(urlApp)
+
+	if (!done) {
+		return (
+			<div className="flex flex-col gap-4">
+				<Input
+					type="text"
+					placeholder="App"
+					value={app}
+					onChange={(e) => {
+						const value = e.target.value
+						setApp(value)
+						navigate({
+							search: {app: value},
+						})
+					}}
+				/>
+				<Button onClick={() => setDone(true)}>Done</Button>
+			</div>
+		)
+	}
+
+	return <JobChart app={app} />
+}
+
+function JobChart({app}: {app: string}) {
 	const {sliders, getTrimPercentage, getAppliedTrimming, trimSlidersStore} =
 		useTrimSliders({name: "jobs"})
 
+	const fetch = useFetch()
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["jobs"],
-		queryFn: () =>
-			execute(
-				{domain: __DOMAIN__, token: __TOKEN__, timeout: 10000},
-				JobsQuery,
-				{app: __APP__, cursor: undefined},
-			),
+		queryFn: () => fetch(JobsQuery, {app, cursor: undefined}),
 	})
 
 	if (isLoading) {
@@ -109,7 +143,7 @@ function RouteComponent() {
 			color: "#2563eb",
 		},
 		special: {
-			label: "Special",
+			label: "Upgrade (2025-05-22)",
 			color: "#f43f5e",
 		},
 	} satisfies ChartConfig

@@ -1,4 +1,4 @@
-import type {TrimSlider, TrimableData} from "@/lib/trim-utils"
+import type {TrimableData} from "@/lib/trim-utils"
 import {applyTrimming} from "@/lib/trim-utils"
 import {createStore} from "@xstate/store"
 import {useSelector} from "@xstate/store/react"

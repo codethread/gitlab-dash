@@ -1,7 +1,3 @@
-declare const __DOMAIN__: string
-declare const __TOKEN__: string
-declare const __APP__: string
-
 interface IChildren {
 	children: React.ReactNode
 }

@@ -1,10 +1,14 @@
 import {ErrorComp} from "@/components/ErrorBoundary"
 import {Layout} from "@/components/Layout"
 // import {LoaderPage} from "@/components/ui/Loader"
-import {createRootRoute, Outlet} from "@tanstack/react-router"
+import {createRootRouteWithContext, Outlet} from "@tanstack/react-router"
 import {TanStackRouterDevtools} from "@tanstack/react-router-devtools"
 
-export const Route = createRootRoute({
+interface AppContext {
+	auth: {domain: string; token: string}
+}
+
+export const Route = createRootRouteWithContext<AppContext>()({
 	component: RootComponent,
 	errorComponent: ErrorComp,
 })

@@ -1,4 +1,4 @@
-import {PipesQuery} from "./-pipes.gql"
+import {PipesQuery} from "../../hooks/data/pipes.gql"
 import {Loader} from "@/components/ui/Loader"
 import {Button} from "@/components/ui/button"
 import {
@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/chart"
 import {Slider} from "@/components/ui/slider"
 import type {Pipeline} from "@/graphql/graphql"
+import {useFetch} from "@/hooks/use-fetch"
 import {useTrimSliders} from "@/hooks/use-trim-sliders"
-import {execute} from "@/lib/fetcher"
 import {useQuery} from "@tanstack/react-query"
 import {createFileRoute} from "@tanstack/react-router"
 import {format, formatDuration} from "date-fns"
@@ -30,25 +30,27 @@ const SOURCES = [
 	"unknown",
 ] as const
 
-export const Route = createFileRoute("/pipes/")({
+export const Route = createFileRoute("/_authed/pipes/")({
 	component: RouteComponent,
+	validateSearch: (search) => {
+		return {
+			app: (search.app as string) ?? "your-app",
+		}
+	},
 })
 
 export const RoutePipesIndex = Route.fullPath
 
 const MAX_TRIM_PERCENTAGE = 50
 function RouteComponent() {
+	const {app} = Route.useSearch()
 	const {sliders, getTrimPercentage, getAppliedTrimming, trimSlidersStore} =
 		useTrimSliders({name: "pipes"})
 
+	const fetch = useFetch()
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["pipes"],
-		queryFn: () =>
-			execute(
-				{domain: __DOMAIN__, token: __TOKEN__, timeout: 10000},
-				PipesQuery,
-				{app: __APP__, cursor: undefined},
-			),
+		queryFn: () => fetch(PipesQuery, {app, cursor: undefined}),
 	})
 
 	useEffect(() => {
@@ -81,20 +83,28 @@ function RouteComponent() {
 			color: "#2563eb",
 		},
 		special: {
-			label: "Special",
+			label: "Upgrade (2025-05-22)",
 			color: "#f43f5e",
 		},
 	} satisfies ChartConfig
 
-	const chartData = data.project.pipelines.nodes.filter(Boolean).map(
-		(pipeline) =>
-			({
+	const chartData = data.project.pipelines.nodes
+		.filter(Boolean)
+		.map((pipeline) => {
+			const data = {
 				...pipeline,
 				source: z.enum(SOURCES).parse(pipeline.source ?? "unknown"),
 				duration: z.number().parse(pipeline.duration),
 				date: pipeline.createdAt,
-			}) as const,
-	)
+			} as const
+			if (data.date.startsWith("2025-05-22")) {
+				// replace duration with special - this allows a stacked bar chart to display in a different color
+				// there's probably a better way to do this
+				return {...data, duration: 0, special: data.duration}
+			}
+			return data
+		})
+		.toSorted((a, b) => a.date.localeCompare(b.date))
 
 	const groupedData = Object.groupBy(chartData, (data) => data.source)
 
@@ -117,17 +127,7 @@ function RouteComponent() {
 				Object.entries(groupedData)
 					.map(([source, data]) => {
 						const trimmedData = getAppliedTrimming(data, source)
-						return [
-							source,
-							trimmedData.map((d) => {
-								if (d.date.startsWith("2025-05-22")) {
-									// replace duration with special - this allows a stacked bar chart to display in a different color
-									// there's probably a better way to do this
-									return {...d, duration: 0, special: d.duration}
-								}
-								return d
-							}),
-						] as const
+						return [source, trimmedData] as const
 					})
 					.map(([source, data]) => {
 						const averageDuration =

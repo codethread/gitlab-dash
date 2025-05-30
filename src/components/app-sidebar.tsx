@@ -10,8 +10,8 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import {Route as JobsRoute} from "@/routes/jobs.index"
-import {Route as PipesRoute} from "@/routes/pipes.index"
+import {Route as JobsRoute} from "@/routes/_authed/jobs.index"
+import {Route as PipesRoute} from "@/routes/_authed/pipes.index"
 import {Link} from "@tanstack/react-router"
 import {ChartColumn, ChartScatter, Home, Settings} from "lucide-react"
 
@@ -50,7 +50,7 @@ export function AppSidebar() {
 							{items.map((item) => (
 								<SidebarMenuItem key={item.title}>
 									<SidebarMenuButton asChild>
-										<Link to={item.url}>
+										<Link to={item.url} search={(prev) => prev}>
 											<item.icon />
 											<span>{item.title}</span>
 										</Link>

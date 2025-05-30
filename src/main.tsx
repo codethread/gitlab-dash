@@ -1,6 +1,7 @@
 import {routeTree} from "./routeTree.gen"
 import "./styles.css"
 import {ErrorBoundary} from "@/components/ErrorBoundary"
+import {AuthProvider} from "@/hooks/auth/AuthProvider"
 import {ThemeProvider} from "@/hooks/theme/ThemeProvider"
 import {createSyncStoragePersister} from "@tanstack/query-sync-storage-persister"
 import {QueryClient} from "@tanstack/react-query"
@@ -12,6 +13,7 @@ import ReactDOM from "react-dom/client"
 
 const router = createRouter({
 	routeTree,
+	context: {auth: undefined!},
 })
 
 declare module "@tanstack/react-router" {
@@ -42,7 +44,9 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 							})
 						}
 					>
-						<RouterProvider router={router} />
+						<AuthProvider>
+							{({auth}) => <RouterProvider router={router} context={{auth}} />}
+						</AuthProvider>
 						<ReactQueryDevtools />
 					</PersistQueryClientProvider>
 				</ErrorBoundary>
