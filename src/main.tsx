@@ -7,13 +7,18 @@ import {createSyncStoragePersister} from "@tanstack/query-sync-storage-persister
 import {QueryClient} from "@tanstack/react-query"
 import {ReactQueryDevtools} from "@tanstack/react-query-devtools"
 import {PersistQueryClientProvider} from "@tanstack/react-query-persist-client"
-import {createRouter, RouterProvider} from "@tanstack/react-router"
+import {
+	createHashHistory,
+	createRouter,
+	RouterProvider,
+} from "@tanstack/react-router"
 import React from "react"
 import ReactDOM from "react-dom/client"
 
 const router = createRouter({
-	basepath: "/gitlab-dash#",
 	routeTree,
+	history: createHashHistory(),
+	defaultPreload: "intent",
 	context: {auth: undefined!},
 })
 

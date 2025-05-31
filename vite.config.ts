@@ -25,7 +25,7 @@ export default defineConfig(() => {
 				},
 			]),
 		],
-		base: "/gitlab-dash#",
+		base: "/gitlab-dash/",
 		resolve: {
 			alias: {
 				"@": path.resolve(__dirname, "./src"),
