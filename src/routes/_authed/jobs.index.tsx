@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/chart"
 import {Input} from "@/components/ui/input"
 import {Slider} from "@/components/ui/slider"
+import type {JobDurationsQuery} from "@/graphql/graphql"
 import {useFetch} from "@/hooks/use-fetch"
 import {useTrimSliders} from "@/hooks/use-trim-sliders"
 import {useQuery} from "@tanstack/react-query"
@@ -82,7 +83,33 @@ function JobChart({app}: {app: string}) {
 	const fetch = useFetch()
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["jobs"],
-		queryFn: () => fetch(JobsQuery, {app, cursor: undefined}),
+		queryFn: async () => {
+			const MAX_PAGES = 4
+			let currentPage = 1
+			let cursor: string | undefined = undefined
+			let hasNextPage = true
+			let allData = null
+
+			while (hasNextPage && currentPage <= MAX_PAGES) {
+				const pageData = (await fetch(JobsQuery, {app, cursor})) as JobDurationsQuery
+
+				if (!allData) {
+					allData = pageData
+				} else if (pageData?.project?.pipelines?.nodes) {
+					// Merge the nodes from the current page into the accumulated data
+					allData.project!.pipelines!.nodes = [
+						...(allData.project!.pipelines!.nodes || []),
+						...(pageData.project!.pipelines!.nodes || []),
+					]
+				}
+
+				hasNextPage = Boolean(pageData?.project?.pipelines?.pageInfo.hasNextPage)
+				cursor = pageData?.project?.pipelines?.pageInfo.endCursor || undefined
+				currentPage++
+			}
+
+			return allData
+		},
 	})
 
 	if (isLoading) {
@@ -231,7 +258,7 @@ function JobChart({app}: {app: string}) {
 											radius={4}
 											onClick={({payload}: {payload: Job}) => {
 												if (payload) {
-													window.open(`https://${__DOMAIN__}${payload.webPath}`, "_blank")
+													window.open(`https://gitlab.com${payload.webPath}`, "_blank")
 												}
 											}}
 										/>

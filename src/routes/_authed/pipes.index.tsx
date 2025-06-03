@@ -10,7 +10,7 @@ import {
 	ChartLegendContent,
 } from "@/components/ui/chart"
 import {Slider} from "@/components/ui/slider"
-import type {Pipeline} from "@/graphql/graphql"
+import type {Pipeline, PipesQuery as PipesQueryType} from "@/graphql/graphql"
 import {useFetch} from "@/hooks/use-fetch"
 import {useTrimSliders} from "@/hooks/use-trim-sliders"
 import {useQuery} from "@tanstack/react-query"
@@ -43,7 +43,34 @@ function RouteComponent() {
 	const fetch = useFetch()
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["pipes"],
-		queryFn: () => fetch(PipesQuery, {app, cursor: undefined}),
+		queryFn: async () => {
+			const MAX_PAGES = 4
+			let currentPage = 1
+			let cursor: string | undefined = undefined
+			let hasNextPage = true
+			let allData = null
+
+			while (hasNextPage && currentPage <= MAX_PAGES) {
+				debugger
+				const pageData = (await fetch(PipesQuery, {app, cursor})) as PipesQueryType
+
+				if (!allData) {
+					allData = pageData
+				} else if (pageData?.project?.pipelines?.nodes) {
+					// Merge the nodes from the current page into the accumulated data
+					allData.project!.pipelines!.nodes = [
+						...(allData.project!.pipelines!.nodes || []),
+						...(pageData.project!.pipelines!.nodes || []),
+					]
+				}
+
+				hasNextPage = Boolean(pageData?.project?.pipelines?.pageInfo.hasNextPage)
+				cursor = pageData?.project?.pipelines?.pageInfo.endCursor || undefined
+				currentPage++
+			}
+
+			return allData
+		},
 	})
 
 	useEffect(() => {
@@ -177,7 +204,7 @@ function RouteComponent() {
 											radius={4}
 											onClick={({payload}: {payload: Pipeline}) => {
 												if (payload) {
-													window.open(`https://${__DOMAIN__}${payload.path}`, "_blank")
+													window.open(`https://gitlab.com${payload.path}`, "_blank")
 												}
 											}}
 										/>
