@@ -7,15 +7,7 @@ export function useFetch() {
 	return execute({domain: auth.domain, token: auth.token, timeout: 10000})
 }
 
-function execute({
-	domain,
-	token,
-	timeout,
-}: {
-	domain: string
-	token: string
-	timeout: number
-}) {
+function execute({domain, token, timeout}: {domain: string; token: string; timeout: number}) {
 	return async <TResult, TVariables>(
 		query: TypedDocumentString<TResult, TVariables>,
 		...[variables]: TVariables extends Record<string, never> ? [] : [TVariables]

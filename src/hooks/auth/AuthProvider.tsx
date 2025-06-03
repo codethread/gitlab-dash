@@ -17,9 +17,7 @@ interface AuthProviderProps {
 	children: (props: {auth: AuthState}) => React.ReactNode
 }
 
-export function AuthProvider({
-	children,
-}: AuthProviderProps): React.ReactElement {
+export function AuthProvider({children}: AuthProviderProps): React.ReactElement {
 	const auth = useSelector(authStore, (state) => state.context)
 
 	const contextValue: AuthContextValue = {
@@ -38,11 +36,7 @@ export function AuthProvider({
 		},
 	}
 
-	return (
-		<AuthContext.Provider value={contextValue}>
-			{children({auth})}
-		</AuthContext.Provider>
-	)
+	return <AuthContext.Provider value={contextValue}>{children({auth})}</AuthContext.Provider>
 }
 
 export function useAuth(): AuthContextValue {

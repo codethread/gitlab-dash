@@ -1,17 +1,10 @@
 import {Alert, AlertTitle, AlertDescription} from "@/components/ui/alert"
 import {parseError} from "@/lib/utils"
 import {Terminal} from "lucide-react"
-import {
-	ErrorBoundary as ReactErrorBoundary,
-	type FallbackProps,
-} from "react-error-boundary"
+import {ErrorBoundary as ReactErrorBoundary, type FallbackProps} from "react-error-boundary"
 
 export function ErrorBoundary({children}: IChildren) {
-	return (
-		<ReactErrorBoundary FallbackComponent={ErrorComp}>
-			{children}
-		</ReactErrorBoundary>
-	)
+	return <ReactErrorBoundary FallbackComponent={ErrorComp}>{children}</ReactErrorBoundary>
 }
 
 export function ErrorComp({error}: Pick<FallbackProps, "error">) {

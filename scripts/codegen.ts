@@ -3,9 +3,7 @@ import type {CodegenConfig} from "@graphql-codegen/cli"
 import fs from "node:fs"
 
 if (!fs.existsSync(SCHEMA_PATH)) {
-	console.log(
-		"No schema, run `pnpm boot` (easy) or `pnpm schem --help` (choice)",
-	)
+	console.log("No schema, run `pnpm boot` (easy) or `pnpm schem --help` (choice)")
 	process.exit(1)
 }
 

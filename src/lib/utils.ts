@@ -26,21 +26,13 @@ export function parseError(e: unknown): string {
 	return JSON.stringify(e)
 }
 
-export function useNeededContext<A>(
-	ctx: Record<string, React.Context<A>>,
-): NonNullable<A> {
+export function useNeededContext<A>(ctx: Record<string, React.Context<A>>): NonNullable<A> {
 	const [name, context] = match(Object.entries(ctx))
-		.with(
-			[P.select()],
-			([name, context]) => [name, React.useContext(context)] as const,
-		)
+		.with([P.select()], ([name, context]) => [name, React.useContext(context)] as const)
 		.otherwise(() =>
-			throwError(
-				"useNeededContext context param should be a record with a single contex value passed in",
-			),
+			throwError("useNeededContext context param should be a record with a single contex value passed in"),
 		)
 
-	if (!context)
-		throw new Error(`${name} should be used inside ${name}.Provider`)
+	if (!context) throw new Error(`${name} should be used inside ${name}.Provider`)
 	return context
 }

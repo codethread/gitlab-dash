@@ -45,12 +45,8 @@ export async function main(args: Args, envs: Envs) {
 	await match({...args, ...envs})
 		.with({domain: P.nonNullable}, (url) => fetchGraph(url.domain))
 		.with({url: P.nonNullable}, (url) => downloadSchema(url.url))
-		.with({GITLAB_SCHEMA_DOMAIN: P.nonNullable}, (url) =>
-			fetchGraph(url.GITLAB_SCHEMA_DOMAIN),
-		)
-		.with({GITLAB_SCHEMA_URL: P.nonNullable}, (url) =>
-			downloadSchema(url.GITLAB_SCHEMA_URL),
-		)
+		.with({GITLAB_SCHEMA_DOMAIN: P.nonNullable}, (url) => fetchGraph(url.GITLAB_SCHEMA_DOMAIN))
+		.with({GITLAB_SCHEMA_URL: P.nonNullable}, (url) => downloadSchema(url.GITLAB_SCHEMA_URL))
 		.otherwise(() => downloadSchema(DEFAULT_URL))
 
 	console.log(`Downloaded to ${SCHEMA_PATH}`)
@@ -126,16 +122,10 @@ async function downloadSchema(jobUrl: string) {
 		throw new Error("failed to fetch jobUrl")
 	})
 	await downloadAndExtractZip(zipUrl, targetDirectory)
-	fs.renameSync(
-		path.join(targetDirectory, "tmp", "tests", "graphql", "gitlab_schema.json"),
-		SCHEMA_PATH,
-	)
+	fs.renameSync(path.join(targetDirectory, "tmp", "tests", "graphql", "gitlab_schema.json"), SCHEMA_PATH)
 }
 
-async function downloadAndExtractZip(
-	url: string,
-	outputDir: string,
-): Promise<void> {
+async function downloadAndExtractZip(url: string, outputDir: string): Promise<void> {
 	const zipFilePath = path.join(outputDir, "temp.zip")
 	if (!fs.existsSync(outputDir)) {
 		fs.mkdirSync(outputDir, {recursive: true})

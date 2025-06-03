@@ -22,9 +22,7 @@ type MaybeNot<T> = T extends null
 	: T extends Date
 		? T
 		: {
-				[K in keyof T]: T[K] extends (infer U)[]
-					? MaybeNot<U>[]
-					: MaybeNot<T[K]>
+				[K in keyof T]: T[K] extends (infer U)[] ? MaybeNot<U>[] : MaybeNot<T[K]>
 			}
 
 /**

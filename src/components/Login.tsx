@@ -1,13 +1,5 @@
 import {Button} from "@/components/ui/button"
-import {
-	Form,
-	FormControl,
-	FormDescription,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/components/ui/form"
+import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form"
 import {Input} from "@/components/ui/input"
 import {useAuth} from "@/hooks/auth"
 import {zodResolver} from "@hookform/resolvers/zod"
@@ -59,10 +51,7 @@ export function Login() {
 				</div>
 				<div className="flex items-center justify-center">
 					<Form {...form}>
-						<form
-							onSubmit={form.handleSubmit(onSubmit)}
-							className="w-2/3 space-y-6"
-						>
+						<form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
 							<FormField
 								control={form.control}
 								name="domain"
@@ -72,9 +61,7 @@ export function Login() {
 										<FormControl>
 											<Input placeholder="gitlab.com" {...field} />
 										</FormControl>
-										<FormDescription>
-											This is your GitLab domain.
-										</FormDescription>
+										<FormDescription>This is your GitLab domain.</FormDescription>
 										<FormMessage />
 									</FormItem>
 								)}
@@ -86,16 +73,9 @@ export function Login() {
 									<FormItem>
 										<FormLabel>Token</FormLabel>
 										<FormControl>
-											<Input
-												type="password"
-												placeholder="glpat-1234567890"
-												autoComplete="off"
-												{...field}
-											/>
+											<Input type="password" placeholder="glpat-1234567890" autoComplete="off" {...field} />
 										</FormControl>
-										<FormDescription>
-											This is your GitLab personal access token.
-										</FormDescription>
+										<FormDescription>This is your GitLab personal access token.</FormDescription>
 										<FormMessage />
 									</FormItem>
 								)}
@@ -112,11 +92,7 @@ export function Login() {
 	)
 }
 
-function CreateTokenButton({
-	form,
-}: {
-	form: UseFormReturn<z.infer<typeof FormSchema>>
-}) {
+function CreateTokenButton({form}: {form: UseFormReturn<z.infer<typeof FormSchema>>}) {
 	const domain = useWatch({control: form.control, name: "domain"})
 	return (
 		<Button
@@ -124,10 +100,7 @@ function CreateTokenButton({
 			variant="outline"
 			disabled={!domain}
 			onClick={() => {
-				window.open(
-					`https://${domain}/-/profile/personal_access_tokens`,
-					"_blank",
-				)
+				window.open(`https://${domain}/-/profile/personal_access_tokens`, "_blank")
 			}}
 		>
 			{domain ? "Create token" : "Enter domain"}

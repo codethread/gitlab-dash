@@ -22,13 +22,7 @@ import {BarChart, Bar, XAxis} from "recharts"
 import {toast} from "sonner"
 import {z} from "zod"
 
-const SOURCES = [
-	"push",
-	"merge_request_event",
-	"schedule",
-	"api",
-	"unknown",
-] as const
+const SOURCES = ["push", "merge_request_event", "schedule", "api", "unknown"] as const
 
 export const Route = createFileRoute("/_authed/pipes/")({
 	component: RouteComponent,
@@ -44,8 +38,7 @@ export const RoutePipesIndex = Route.fullPath
 const MAX_TRIM_PERCENTAGE = 50
 function RouteComponent() {
 	const {app} = Route.useSearch()
-	const {sliders, getTrimPercentage, getAppliedTrimming, trimSlidersStore} =
-		useTrimSliders({name: "pipes"})
+	const {sliders, getTrimPercentage, getAppliedTrimming, trimSlidersStore} = useTrimSliders({name: "pipes"})
 
 	const fetch = useFetch()
 	const {data, isLoading, error} = useQuery({
@@ -55,13 +48,7 @@ function RouteComponent() {
 
 	useEffect(() => {
 		const pipes = data?.project?.pipelines?.nodes
-		const sources = Array.from(
-			new Set(
-				pipes?.map((pipeline) =>
-					z.enum(SOURCES).parse(pipeline?.source ?? "unknown"),
-				),
-			),
-		)
+		const sources = Array.from(new Set(pipes?.map((pipeline) => z.enum(SOURCES).parse(pipeline?.source ?? "unknown"))))
 		trimSlidersStore.send({type: "initializeSliders", sources})
 	}, [data, trimSlidersStore])
 
@@ -123,15 +110,14 @@ function RouteComponent() {
 				<Copy className="h-4 w-4" />
 			</Button>
 			<hr className="my-4" />
-			{sliders.length > 0 &&
-				Object.entries(groupedData)
+			{sliders.length > 0
+				&& Object.entries(groupedData)
 					.map(([source, data]) => {
 						const trimmedData = getAppliedTrimming(data, source)
 						return [source, trimmedData] as const
 					})
 					.map(([source, data]) => {
-						const averageDuration =
-							data.reduce((acc, d) => acc + d.duration, 0) / data.length
+						const averageDuration = data.reduce((acc, d) => acc + d.duration, 0) / data.length
 						return (
 							<div key={source}>
 								<div className="">
@@ -151,9 +137,7 @@ function RouteComponent() {
 												},
 											)}
 										</p>
-										<p className="shrink-0 text-sm text-gray-500">
-											Trim percentage {getTrimPercentage(source)}%
-										</p>
+										<p className="shrink-0 text-sm text-gray-500">Trim percentage {getTrimPercentage(source)}%</p>
 										<Slider
 											min={0}
 											max={MAX_TRIM_PERCENTAGE}
@@ -173,11 +157,7 @@ function RouteComponent() {
 								</div>
 								<ChartContainer config={chartConfig}>
 									<BarChart accessibilityLayer data={data}>
-										<XAxis
-											dataKey="date"
-											tickMargin={10}
-											tickFormatter={(value) => format(value, "d/MM")}
-										/>
+										<XAxis dataKey="date" tickMargin={10} tickFormatter={(value) => format(value, "d/MM")} />
 										<ChartTooltip
 											content={
 												<ChartTooltipContent
@@ -189,12 +169,7 @@ function RouteComponent() {
 											}
 										/>
 										<ChartLegend content={<ChartLegendContent />} />
-										<Bar
-											dataKey="special"
-											stackId="a"
-											fill="var(--color-special)"
-											radius={4}
-										/>
+										<Bar dataKey="special" stackId="a" fill="var(--color-special)" radius={4} />
 										<Bar
 											dataKey="duration"
 											stackId="a"
@@ -202,10 +177,7 @@ function RouteComponent() {
 											radius={4}
 											onClick={({payload}: {payload: Pipeline}) => {
 												if (payload) {
-													window.open(
-														`https://${__DOMAIN__}${payload.path}`,
-														"_blank",
-													)
+													window.open(`https://${__DOMAIN__}${payload.path}`, "_blank")
 												}
 											}}
 										/>

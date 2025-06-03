@@ -19,13 +19,7 @@ export function Loader({
 	...props
 }: React.ComponentProps<"svg"> & VariantProps<typeof loaderVariants>) {
 	return (
-		<span
-			className={
-				variant === "page"
-					? "animate-fade flex h-svh items-center justify-center"
-					: ""
-			}
-		>
+		<span className={variant === "page" ? "animate-fade flex h-svh items-center justify-center" : ""}>
 			<svg
 				role="img"
 				aria-label="loading"
@@ -35,14 +29,7 @@ export function Loader({
 				viewBox="0 0 24 24"
 				{...props}
 			>
-				<circle
-					className="opacity-25"
-					cx="12"
-					cy="12"
-					r="10"
-					stroke="currentColor"
-					strokeWidth="4"
-				/>
+				<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
 				<path
 					className="opacity-75"
 					fill="currentColor"
@@ -53,6 +40,4 @@ export function Loader({
 	)
 }
 
-export const LoaderPage: typeof Loader = (props) => (
-	<Loader variant="page" {...props} />
-)
+export const LoaderPage: typeof Loader = (props) => <Loader variant="page" {...props} />

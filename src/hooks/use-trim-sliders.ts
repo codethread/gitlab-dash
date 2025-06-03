@@ -27,16 +27,13 @@ const createTrimSlidersStore = (snapshot: TrimSlidersContext | null) =>
 				...context,
 				sliders: event.sources.map((source) => ({
 					source,
-					trimPercentage: context.sliders.find((s) => s.source === source)
-						?.trimPercentage ?? [0],
+					trimPercentage: context.sliders.find((s) => s.source === source)?.trimPercentage ?? [0],
 				})),
 			}),
 			updateSliderValue: (context, event: {source: string; value: number}) => ({
 				...context,
 				sliders: context.sliders.map((slider) =>
-					slider.source === event.source
-						? {...slider, trimPercentage: [event.value] as [number]}
-						: slider,
+					slider.source === event.source ? {...slider, trimPercentage: [event.value] as [number]} : slider,
 				),
 			}),
 		},
@@ -67,10 +64,7 @@ export function useTrimSliders({name}: {name: string}) {
 		return () => unsubscribe.unsubscribe()
 	}, [trimSlidersStore, name])
 
-	const sliders = useSelector(
-		trimSlidersStore,
-		(state) => state.context.sliders,
-	)
+	const sliders = useSelector(trimSlidersStore, (state) => state.context.sliders)
 
 	const getTrimPercentage = useCallback(
 		(source: string): number => {

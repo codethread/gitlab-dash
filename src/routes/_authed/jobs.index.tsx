@@ -14,10 +14,7 @@ import {Slider} from "@/components/ui/slider"
 import {useFetch} from "@/hooks/use-fetch"
 import {useTrimSliders} from "@/hooks/use-trim-sliders"
 import {useQuery} from "@tanstack/react-query"
-import {
-	createFileRoute,
-	useNavigate,
-} from "@tanstack/react-router"
+import {createFileRoute, useNavigate} from "@tanstack/react-router"
 import {format, formatDuration} from "date-fns"
 import {Copy} from "lucide-react"
 import {useEffect, useState} from "react"
@@ -80,8 +77,7 @@ function RouteComponent() {
 }
 
 function JobChart({app}: {app: string}) {
-	const {sliders, getTrimPercentage, getAppliedTrimming, trimSlidersStore} =
-		useTrimSliders({name: "jobs"})
+	const {sliders, getTrimPercentage, getAppliedTrimming, trimSlidersStore} = useTrimSliders({name: "jobs"})
 
 	const fetch = useFetch()
 	const {data, isLoading, error} = useQuery({
@@ -118,9 +114,7 @@ function JobChart({app}: {app: string}) {
 								format: ["minutes", "seconds"],
 							},
 						),
-						name: BUILD_JOBS.includes(job?.name ?? "nope")
-							? "build"
-							: job?.name,
+						name: BUILD_JOBS.includes(job?.name ?? "nope") ? "build" : job?.name,
 						jobName: job?.name,
 						webPath: job?.webPath,
 					}),
@@ -163,8 +157,8 @@ function JobChart({app}: {app: string}) {
 				<Copy className="h-4 w-4" />
 			</Button>
 			<hr className="my-4" />
-			{sliders.length > 0 &&
-				Object.entries(groupedData)
+			{sliders.length > 0
+				&& Object.entries(groupedData)
 					.map(([name, data]) => {
 						const trimmedData = getAppliedTrimming(data, name)
 						return [
@@ -180,8 +174,7 @@ function JobChart({app}: {app: string}) {
 						] as const
 					})
 					.map(([name, data]) => {
-						const averageDuration =
-							data.reduce((acc, d) => acc + d.duration, 0) / data.length
+						const averageDuration = data.reduce((acc, d) => acc + d.duration, 0) / data.length
 						return (
 							<div key={name}>
 								<div className="">
@@ -201,9 +194,7 @@ function JobChart({app}: {app: string}) {
 												},
 											)}
 										</p>
-										<p className="shrink-0 text-sm text-gray-500">
-											Trim percentage {getTrimPercentage(name)}%
-										</p>
+										<p className="shrink-0 text-sm text-gray-500">Trim percentage {getTrimPercentage(name)}%</p>
 										<Slider
 											min={0}
 											max={MAX_TRIM_PERCENTAGE}
@@ -223,27 +214,16 @@ function JobChart({app}: {app: string}) {
 								</div>
 								<ChartContainer config={chartConfig}>
 									<BarChart accessibilityLayer data={data}>
-										<XAxis
-											dataKey="date"
-											tickMargin={10}
-											tickFormatter={(value) => format(value, "d/MM")}
-										/>
+										<XAxis dataKey="date" tickMargin={10} tickFormatter={(value) => format(value, "d/MM")} />
 										<ChartTooltip
 											content={
 												<ChartTooltipContent
-													formatter={(_, __, item) =>
-														`${item.payload?.jobName} ${item.payload?.durationDisplay}`
-													}
+													formatter={(_, __, item) => `${item.payload?.jobName} ${item.payload?.durationDisplay}`}
 												/>
 											}
 										/>
 										<ChartLegend content={<ChartLegendContent />} />
-										<Bar
-											dataKey="special"
-											stackId="a"
-											fill="var(--color-special)"
-											radius={4}
-										/>
+										<Bar dataKey="special" stackId="a" fill="var(--color-special)" radius={4} />
 										<Bar
 											dataKey="duration"
 											stackId="a"
@@ -251,10 +231,7 @@ function JobChart({app}: {app: string}) {
 											radius={4}
 											onClick={({payload}: {payload: Job}) => {
 												if (payload) {
-													window.open(
-														`https://${__DOMAIN__}${payload.webPath}`,
-														"_blank",
-													)
+													window.open(`https://${__DOMAIN__}${payload.webPath}`, "_blank")
 												}
 											}}
 										/>
