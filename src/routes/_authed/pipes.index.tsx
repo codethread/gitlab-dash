@@ -9,15 +9,17 @@ import {
 	ChartLegend,
 	ChartLegendContent,
 } from "@/components/ui/chart"
+import {Input} from "@/components/ui/input"
 import {Slider} from "@/components/ui/slider"
 import type {Pipeline, PipesQuery as PipesQueryType} from "@/graphql/graphql"
-import {useFetch} from "@/hooks/use-fetch"
+import {useAuth} from "@/hooks/auth"
+import {usePaginatedFetch} from "@/hooks/use-paginated-fetch"
 import {useTrimSliders} from "@/hooks/use-trim-sliders"
 import {useQuery} from "@tanstack/react-query"
-import {createFileRoute} from "@tanstack/react-router"
+import {createFileRoute, useNavigate} from "@tanstack/react-router"
 import {format, formatDuration} from "date-fns"
 import {Copy} from "lucide-react"
-import {useEffect} from "react"
+import {useEffect, useState} from "react"
 import {BarChart, Bar, XAxis} from "recharts"
 import {toast} from "sonner"
 import {z} from "zod"
@@ -37,40 +39,43 @@ export const RoutePipesIndex = Route.fullPath
 
 const MAX_TRIM_PERCENTAGE = 50
 function RouteComponent() {
-	const {app} = Route.useSearch()
+	const {app: urlApp} = Route.useSearch()
+	const navigate = useNavigate({from: Route.fullPath})
+	const [done, setDone] = useState(urlApp !== "your-app")
+	const [app, setApp] = useState(urlApp)
+
+	return (
+		<>
+			<div className="flex gap-4">
+				<Input
+					type="text"
+					placeholder="App"
+					value={app}
+					onChange={(e) => {
+						const value = e.target.value
+						setApp(value)
+						navigate({
+							search: {app: value},
+						})
+					}}
+				/>
+				<Button onClick={() => setDone(true)}>Done</Button>
+			</div>
+			{done ? <PipeChart app={app} /> : null}
+		</>
+	)
+}
+
+function PipeChart({app}: {app: string}) {
 	const {sliders, getTrimPercentage, getAppliedTrimming, trimSlidersStore} = useTrimSliders({name: "pipes"})
 
-	const fetch = useFetch()
+	const {
+		auth: {domain},
+	} = useAuth()
+	const fetchPaginated = usePaginatedFetch()
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["pipes"],
-		queryFn: async () => {
-			const MAX_PAGES = 4
-			let currentPage = 1
-			let cursor: string | undefined = undefined
-			let hasNextPage = true
-			let allData = null
-
-			while (hasNextPage && currentPage <= MAX_PAGES) {
-				debugger
-				const pageData = (await fetch(PipesQuery, {app, cursor})) as PipesQueryType
-
-				if (!allData) {
-					allData = pageData
-				} else if (pageData?.project?.pipelines?.nodes) {
-					// Merge the nodes from the current page into the accumulated data
-					allData.project!.pipelines!.nodes = [
-						...(allData.project!.pipelines!.nodes || []),
-						...(pageData.project!.pipelines!.nodes || []),
-					]
-				}
-
-				hasNextPage = Boolean(pageData?.project?.pipelines?.pageInfo.hasNextPage)
-				cursor = pageData?.project?.pipelines?.pageInfo.endCursor || undefined
-				currentPage++
-			}
-
-			return allData
-		},
+		queryFn: () => fetchPaginated<PipesQueryType>(PipesQuery, {app}),
 	})
 
 	useEffect(() => {
@@ -204,7 +209,7 @@ function RouteComponent() {
 											radius={4}
 											onClick={({payload}: {payload: Pipeline}) => {
 												if (payload) {
-													window.open(`https://gitlab.com${payload.path}`, "_blank")
+													window.open(`https://${domain}${payload.path}`, "_blank")
 												}
 											}}
 										/>

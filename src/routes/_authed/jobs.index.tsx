@@ -12,7 +12,8 @@ import {
 import {Input} from "@/components/ui/input"
 import {Slider} from "@/components/ui/slider"
 import type {JobDurationsQuery} from "@/graphql/graphql"
-import {useFetch} from "@/hooks/use-fetch"
+import {useAuth} from "@/hooks/auth"
+import {usePaginatedFetch} from "@/hooks/use-paginated-fetch"
 import {useTrimSliders} from "@/hooks/use-trim-sliders"
 import {useQuery} from "@tanstack/react-query"
 import {createFileRoute, useNavigate} from "@tanstack/react-router"
@@ -54,9 +55,9 @@ function RouteComponent() {
 	const [done, setDone] = useState(urlApp !== "your-app")
 	const [app, setApp] = useState(urlApp)
 
-	if (!done) {
-		return (
-			<div className="flex flex-col gap-4">
+	return (
+		<>
+			<div className="flex gap-4">
 				<Input
 					type="text"
 					placeholder="App"
@@ -71,45 +72,21 @@ function RouteComponent() {
 				/>
 				<Button onClick={() => setDone(true)}>Done</Button>
 			</div>
-		)
-	}
-
-	return <JobChart app={app} />
+			{done ? <JobChart app={app} /> : null}
+		</>
+	)
 }
 
 function JobChart({app}: {app: string}) {
 	const {sliders, getTrimPercentage, getAppliedTrimming, trimSlidersStore} = useTrimSliders({name: "jobs"})
 
-	const fetch = useFetch()
+	const {
+		auth: {domain},
+	} = useAuth()
+	const fetchPaginated = usePaginatedFetch()
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["jobs"],
-		queryFn: async () => {
-			const MAX_PAGES = 4
-			let currentPage = 1
-			let cursor: string | undefined = undefined
-			let hasNextPage = true
-			let allData = null
-
-			while (hasNextPage && currentPage <= MAX_PAGES) {
-				const pageData = (await fetch(JobsQuery, {app, cursor})) as JobDurationsQuery
-
-				if (!allData) {
-					allData = pageData
-				} else if (pageData?.project?.pipelines?.nodes) {
-					// Merge the nodes from the current page into the accumulated data
-					allData.project!.pipelines!.nodes = [
-						...(allData.project!.pipelines!.nodes || []),
-						...(pageData.project!.pipelines!.nodes || []),
-					]
-				}
-
-				hasNextPage = Boolean(pageData?.project?.pipelines?.pageInfo.hasNextPage)
-				cursor = pageData?.project?.pipelines?.pageInfo.endCursor || undefined
-				currentPage++
-			}
-
-			return allData
-		},
+		queryFn: () => fetchPaginated<JobDurationsQuery>(JobsQuery, {app}),
 	})
 
 	if (isLoading) {
@@ -258,7 +235,7 @@ function JobChart({app}: {app: string}) {
 											radius={4}
 											onClick={({payload}: {payload: Job}) => {
 												if (payload) {
-													window.open(`https://gitlab.com${payload.webPath}`, "_blank")
+													window.open(`https://${domain}${payload.webPath}`, "_blank")
 												}
 											}}
 										/>
